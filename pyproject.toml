@@ -14,7 +14,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = ["customtkinter==5.2.2"]
 
 [project.scripts]
 pydarts = "pydarts.main:main"

@@ -8,7 +8,7 @@ import pydarts.gui
 
 
 class PregameStage(pydarts.gui.BaseStage):
-    width, height = 640, 400
+    width, height = 1200, 750
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -44,7 +44,7 @@ class ModeSelection(ctk.CTkFrame):
             text="Please select a game mode.",
             anchor="nw",
             justify="left",
-            wraplength=280,
+            wraplength=250,
         )
         self.description_lbl.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
         return None
@@ -73,36 +73,18 @@ class PlayerSelection(ctk.CTkFrame):
 
         self.player_selection_overview = PlayerSelectionOverview(self)
         self.player_selection_overview.grid(column=0, row=1, sticky="NSWE", padx=10, pady=5)
-
-        self.player_selection_controls = PlayerSelectionControls(self, fg_color="transparent")
-        self.player_selection_controls.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 10))
-        self.player_selection_controls.remove_btn.configure(command=self._remove_player_cmd)
-        return None
-
-    def _select_player_cmd(self, event: tk.Event) -> None:
-        selected_player = event.widget.master.cget("text")[3:]
-        for child in self.player_selection_overview.winfo_children():
-            if child.cget("text")[3:] != selected_player:
-                child.configure(fg_color="gray30")  # type: ignore
-                continue
-            self.selected_player = selected_player
-            child.configure(fg_color="black")  # type: ignore
         return None
 
     def _draw_players(self) -> None:
         for child in self.player_selection_overview.winfo_children():
             child.destroy()
         for row, player in enumerate(self.players):
-            text = f"{row + 1}. {player}"
-            label = ctk.CTkLabel(
+            player_item = PlayerSelectionOverviewPlayer(
                 self.player_selection_overview,
-                text=text,
-                anchor="w",
-                fg_color="gray30",
-                corner_radius=7,
+                position=row+1,
+                name=player,
             )
-            label.grid(column=0, row=row, sticky="NSWE", padx=3, pady=3)
-            label.bind("<ButtonRelease-1>", self._select_player_cmd)
+            player_item.grid(column=0, row=row, sticky="NSWE", padx=3, pady=3)
         return None
 
     def _add_player_cmd(self) -> None:
@@ -124,14 +106,14 @@ class PlayerSelectionEntry(ctk.CTkFrame):
         self.grid_columnconfigure(index=2, weight=1)
 
         self.entry_lbl = ctk.CTkLabel(self, text="Players: ")
-        self.entry_lbl.grid(column=0, row=0, sticky="NSWE", padx=(0, 5))
+        self.entry_lbl.grid(column=0, row=0, sticky="NSWE")
 
         self.entry_var = tk.StringVar()
         self.entry_ntr = ctk.CTkEntry(self, textvariable=self.entry_var)
         self.entry_ntr.grid(column=1, row=0, sticky="NSWE", padx=5)
 
         self.add_btn = ctk.CTkButton(self, text="+", width=10)
-        self.add_btn.grid(column=2, row=0, sticky="NSWE", padx=(5, 0))
+        self.add_btn.grid(column=2, row=0, sticky="NSWE")
         return None
 
 
@@ -142,20 +124,36 @@ class PlayerSelectionOverview(ctk.CTkScrollableFrame):
         return None
 
 
-class PlayerSelectionControls(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.grid_columnconfigure(index=0, weight=1)
+class PlayerSelectionOverviewPlayer(ctk.CTkFrame):
+    def __init__(
+        self,
+        master: PlayerSelectionOverview,
+        position: int,
+        name: str,
+        *args,
+        **kwargs,
+    ) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.position = position
+        self.name = name
         self.grid_columnconfigure(index=1, weight=1)
-        self.grid_columnconfigure(index=2, weight=1)
-        self.grid_rowconfigure(index=0, weight=1)
+        self.configure(fg_color="transparent", corner_radius=7)
 
-        self.remove_btn = ctk.CTkButton(self, text="-")
-        self.remove_btn.grid(column=0, row=0, sticky="NSWE", padx=(0, 5))
+        self.move_up_btn = ctk.CTkButton(self, text="∧", width=0)
+        self.move_up_btn.grid(column=0, row=0, sticky="NSWE", pady=(0, 1))
 
-        self.move_up_btn = ctk.CTkButton(self, text="∧")
-        self.move_up_btn.grid(column=1, row=0, sticky="NSWE", padx=(5, 5))
+        self.move_down_btn = ctk.CTkButton(self, text="∨", width=0)
+        self.move_down_btn.grid(column=0, row=1, sticky="NSWE", pady=(1, 0))
 
-        self.move_down_btn = ctk.CTkButton(self, text="∨")
-        self.move_down_btn.grid(column=2, row=0, sticky="NSWE", padx=(5, 0))
+        self.player_lbl = ctk.CTkLabel(
+            self,
+            text=f"{self.position}. {self.name}",
+            anchor="w",
+            fg_color="gray30",
+            corner_radius=5,
+        )
+        self.player_lbl.grid(column=1, row=0, rowspan=2, sticky="NSWE", padx=5)
+
+        self.remove_btn = ctk.CTkButton(self, text="―", width=0)
+        self.remove_btn.grid(column=2, row=0, rowspan=2, sticky="NSWE")
         return None

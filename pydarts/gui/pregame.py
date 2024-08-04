@@ -23,8 +23,14 @@ class PregameStage(pydarts.gui.BaseStage):
         self.player_selection_frm = PlayerSelectionFrm(self)
         self.player_selection_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
 
-        self.start_btn = ctk.CTkButton(self, text="Start")
+        self.start_btn = ctk.CTkButton(self, text="Start", command=self._start_cmd)
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
+        return None
+
+    def _start_cmd(self) -> None:
+        # TODO: raise event or some like dat
+        print(f"Mode: {self.mode_selection_frm.mode.get_name()}")
+        print(f"Players: {self.player_selection_frm.players}")
         return None
 
 
@@ -33,6 +39,7 @@ class ModeSelectionFrm(ctk.CTkFrame):
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=1, weight=1)
+        self.mode: type[pydarts.core.modes.BaseMode]
 
         self.selection_var = ctk.StringVar()
         self.selection_var.trace_add("write", lambda *_: self._mode_selected_cmd())
@@ -59,8 +66,8 @@ class ModeSelectionFrm(ctk.CTkFrame):
         # somehow 'write' is triggered twice, but only the second event has a value
         if not (selection := self.selection_var.get()):
             return None
-        mode = pydarts.core.get_mode_by_name(selection)
-        self.description_lbl.configure(text=mode.get_description())
+        self.mode = pydarts.core.get_mode_by_name(selection)
+        self.description_lbl.configure(text=self.mode.get_description())
         return None
 
 

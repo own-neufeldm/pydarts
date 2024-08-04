@@ -16,9 +16,7 @@ class App(ctk.CTk):
         self.iconbitmap(pydarts.assets_dir / "icon.ico")
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=0, weight=1)
-
         ctk.set_widget_scaling(2)
-        # ctk.set_window_scaling(1.5)
 
         self.active_stage: BaseStage
         self._load_stage(PregameStage)

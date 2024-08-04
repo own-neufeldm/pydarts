@@ -16,15 +16,15 @@ class PregameStage(pydarts.gui.BaseStage):
         self.grid_columnconfigure(index=1, weight=1, minsize=PregameStage.width // 2)
         self.grid_rowconfigure(index=0, weight=1)
 
-        self.mode_selection = ModeSelection(self)
-        self.mode_selection.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
+        self.mode_selection_frm = ModeSelectionFrm(self)
+        self.mode_selection_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
 
-        self.player_selection = PlayerSelection(self)
-        self.player_selection.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
+        self.player_selection_frm = PlayerSelectionFrm(self)
+        self.player_selection_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
         return None
 
 
-class ModeSelection(ctk.CTkFrame):
+class ModeSelectionFrm(ctk.CTkFrame):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
@@ -55,7 +55,7 @@ class ModeSelection(ctk.CTkFrame):
         return None
 
 
-class PlayerSelection(ctk.CTkFrame):
+class PlayerSelectionFrm(ctk.CTkFrame):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
@@ -63,24 +63,24 @@ class PlayerSelection(ctk.CTkFrame):
         self.players: list[str] = []
         self.selected_player = ""
 
-        self.player_selection_entry = PlayerSelectionEntry(self, fg_color="transparent")
-        self.player_selection_entry.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
-        self.player_selection_entry.entry_ntr.bind(
+        self.player_entry_frm = PlayerEntryFrm(self, fg_color="transparent")
+        self.player_entry_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.player_entry_frm.entry_ntr.bind(
             "<Return>",
-            lambda *_: self.player_selection_entry.add_btn.invoke()
+            lambda *_: self.player_entry_frm.add_btn.invoke()
         )
-        self.player_selection_entry.add_btn.configure(command=self._add_player_cmd)
+        self.player_entry_frm.add_btn.configure(command=self._add_player_cmd)
 
-        self.player_selection_overview = PlayerSelectionOverview(self)
-        self.player_selection_overview.grid(column=0, row=1, sticky="NSWE", padx=10, pady=5)
+        self.player_overview_sfrm = PlayerOverviewSfrm(self)
+        self.player_overview_sfrm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=5)
         return None
 
     def _draw_players(self) -> None:
-        for child in self.player_selection_overview.winfo_children():
+        for child in self.player_overview_sfrm.winfo_children():
             child.destroy()
         for row, player in enumerate(self.players):
-            player_item = PlayerSelectionOverviewPlayer(
-                self.player_selection_overview,
+            player_item = PlayerFrm(
+                self.player_overview_sfrm,
                 position=row+1,
                 name=player,
             )
@@ -88,10 +88,10 @@ class PlayerSelection(ctk.CTkFrame):
         return None
 
     def _add_player_cmd(self) -> None:
-        name = self.player_selection_entry.entry_var.get().strip()
+        name = self.player_entry_frm.entry_var.get().strip()
         if name and name not in self.players and len(self.players) < 8:
             self.players.append(name)
-        self.player_selection_entry.entry_var.set("")
+        self.player_entry_frm.entry_var.set("")
         self._draw_players()
         return None
 
@@ -99,7 +99,7 @@ class PlayerSelection(ctk.CTkFrame):
         return None
 
 
-class PlayerSelectionEntry(ctk.CTkFrame):
+class PlayerEntryFrm(ctk.CTkFrame):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=1, weight=1)
@@ -117,17 +117,17 @@ class PlayerSelectionEntry(ctk.CTkFrame):
         return None
 
 
-class PlayerSelectionOverview(ctk.CTkScrollableFrame):
+class PlayerOverviewSfrm(ctk.CTkScrollableFrame):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
         return None
 
 
-class PlayerSelectionOverviewPlayer(ctk.CTkFrame):
+class PlayerFrm(ctk.CTkFrame):
     def __init__(
         self,
-        master: PlayerSelectionOverview,
+        master: PlayerOverviewSfrm,
         position: int,
         name: str,
         *args,

@@ -71,7 +71,6 @@ class PlayerSelectionFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=1, weight=1)
         self.players: list[str] = []
         self.max_players = 8
-        self.selected_player = ""
 
         self.player_entry_frm = PlayerEntryFrm(self, fg_color="transparent")
         self.player_entry_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))

@@ -56,10 +56,8 @@ class ModeSelectionFrm(ctk.CTkFrame):
         return None
 
     def _mode_selected_cmd(self) -> None:
-        selection = self.selection_var.get()
-        # TODO: find cause and fix, remove work-around
-        if not selection:
-            # somehow 'write' is triggered twice, but only the seconds event has a value
+        # somehow 'write' is triggered twice, but only the second event has a value
+        if not (selection := self.selection_var.get()):
             return None
         mode = pydarts.core.get_mode_by_name(selection)
         self.description_lbl.configure(text=mode.get_description())

@@ -1,3 +1,4 @@
+import functools
 import tkinter as tk
 
 import customtkinter as ctk
@@ -21,6 +22,9 @@ class PregameStage(pydarts.gui.BaseStage):
 
         self.player_selection_frm = PlayerSelectionFrm(self)
         self.player_selection_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
+
+        self.start_btn = ctk.CTkButton(self, text="Start")
+        self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         return None
 
 
@@ -31,10 +35,10 @@ class ModeSelectionFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=1, weight=1)
 
         self.selection_var = ctk.StringVar()
+        self.selection_var.trace_add("write", lambda *_: self._mode_selected_cmd())
         self.seletion_cbx = ctk.CTkComboBox(
             self,
             variable=self.selection_var,
-            command=self._mode_selected_cmd,
             values=pydarts.core.get_mode_names(),
         )
         self.seletion_cbx.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
@@ -47,9 +51,16 @@ class ModeSelectionFrm(ctk.CTkFrame):
             wraplength=250,
         )
         self.description_lbl.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
+
+        self.selection_var.set(pydarts.core.get_mode_names()[0])
         return None
 
-    def _mode_selected_cmd(self, selection: str) -> None:
+    def _mode_selected_cmd(self) -> None:
+        selection = self.selection_var.get()
+        # TODO: find cause and fix, remove work-around
+        if not selection:
+            # somehow 'write' is triggered twice, but only the seconds event has a value
+            return None
         mode = pydarts.core.get_mode_by_name(selection)
         self.description_lbl.configure(text=mode.get_description())
         return None
@@ -61,6 +72,7 @@ class PlayerSelectionFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=1, weight=1)
         self.players: list[str] = []
+        self.max_players = 8
         self.selected_player = ""
 
         self.player_entry_frm = PlayerEntryFrm(self, fg_color="transparent")
@@ -79,23 +91,44 @@ class PlayerSelectionFrm(ctk.CTkFrame):
         for child in self.player_overview_sfrm.winfo_children():
             child.destroy()
         for row, player in enumerate(self.players):
-            player_item = PlayerFrm(
+            player_frm = PlayerFrm(
                 self.player_overview_sfrm,
                 position=row+1,
                 name=player,
             )
-            player_item.grid(column=0, row=row, sticky="NSWE", padx=3, pady=3)
+            player_frm.grid(column=0, row=row, sticky="NSWE", padx=3, pady=3)
+            player_frm.move_up_btn.configure(command=functools.partial(self._move_player_up_cmd, row))
+            player_frm.move_down_btn.configure(command=functools.partial(self._move_player_down_cmd, row))
+            player_frm.remove_btn.configure(command=functools.partial(self._remove_player_cmd, row))
+            if row == 0:
+                player_frm.move_up_btn.configure(state="disabled")
+            if row == len(self.players) - 1:
+                player_frm.move_down_btn.configure(state="disabled")
         return None
 
     def _add_player_cmd(self) -> None:
         name = self.player_entry_frm.entry_var.get().strip()
-        if name and name not in self.players and len(self.players) < 8:
+        if name and name not in self.players and len(self.players) < self.max_players:
             self.players.append(name)
         self.player_entry_frm.entry_var.set("")
         self._draw_players()
         return None
 
-    def _remove_player_cmd(self) -> None:
+    def _move_player_up_cmd(self, row: int) -> None:
+        player = self.players.pop(row)
+        self.players.insert(row-1, player)
+        self._draw_players()
+        return None
+
+    def _move_player_down_cmd(self, row: int) -> None:
+        player = self.players.pop(row)
+        self.players.insert(row+1, player)
+        self._draw_players()
+        return None
+
+    def _remove_player_cmd(self, row: int) -> None:
+        self.players.pop(row)
+        self._draw_players()
         return None
 
 

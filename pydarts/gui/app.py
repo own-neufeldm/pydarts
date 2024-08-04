@@ -3,8 +3,10 @@ import tkinter as tk
 import customtkinter as ctk
 
 import pydarts
+import pydarts.core
 import pydarts.gui
 from pydarts.gui import BaseStage
+from pydarts.gui.game import GameStage
 from pydarts.gui.pregame import PregameStage
 
 
@@ -22,10 +24,15 @@ class App(ctk.CTk):
         self._load_stage(PregameStage)
         return None
 
-    def _load_stage(self, stage_type: type[BaseStage], *args, **kwargs) -> None:
+    def _load_stage(self, stage_type: type[BaseStage], **kwargs) -> None:
         if stage_type is PregameStage:
-            self.active_stage = stage_type(self, *args, **kwargs)
+            self.active_stage = PregameStage(self, **kwargs)
             width, height = PregameStage.width, PregameStage.height
+            self.active_stage.start_btn.configure(command=self._start_game_cmd)
+        if stage_type is GameStage:
+            self.active_stage.destroy()
+            self.active_stage = GameStage(self, **kwargs)
+            width, height = GameStage.width, GameStage.height
         self.active_stage.grid(column=0, row=0, sticky="NSWE")
         self.minsize(width, height)
         self.maxsize(width, height)
@@ -47,3 +54,10 @@ class App(ctk.CTk):
             f"  event: {event!r}\n"
             f"  widget: {event.widget!r}"
         )
+
+    def _start_game_cmd(self) -> None:
+        stage: PregameStage = self.active_stage  # type: ignore
+        mode = pydarts.core.get_mode_by_name(stage.mode_selection_frm.mode_var.get())
+        players = stage.player_selection_frm.players_var.get()
+        self._load_stage(GameStage, mode=mode, players=players)
+        return None

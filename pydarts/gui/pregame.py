@@ -1,5 +1,5 @@
 import functools
-import tkinter as tk
+import re
 
 import customtkinter as ctk
 
@@ -19,18 +19,24 @@ class PregameStage(pydarts.gui.BaseStage):
 
         self.mode_selection_frm = ModeSelectionFrm(self)
         self.mode_selection_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
+        self.mode_selection_frm.mode_var.trace_add("write", lambda *_: self._selection_changed_cmd())
 
         self.player_selection_frm = PlayerSelectionFrm(self)
         self.player_selection_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
+        self.player_selection_frm.players_var.trace_add("write", lambda *_: self._selection_changed_cmd())
 
-        self.start_btn = ctk.CTkButton(self, text="Start", command=self._start_cmd)
+        self.start_btn = ctk.CTkButton(self, text="Start")
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
+        self.start_btn.configure(state="disabled")
         return None
 
-    def _start_cmd(self) -> None:
-        # TODO: raise event or some like dat
-        print(f"Mode: {self.mode_selection_frm.mode.get_name()}")
-        print(f"Players: {self.player_selection_frm.players}")
+    def _selection_changed_cmd(self) -> None:
+        mode = self.mode_selection_frm.mode_var.get()
+        players = self.player_selection_frm.players_var.get()
+        if mode and players:
+            self.start_btn.configure(state="enabled")
+        else:
+            self.start_btn.configure(state="disabled")
         return None
 
 
@@ -39,16 +45,15 @@ class ModeSelectionFrm(ctk.CTkFrame):
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=1, weight=1)
-        self.mode: type[pydarts.core.modes.BaseMode]
 
-        self.selection_var = ctk.StringVar()
-        self.selection_var.trace_add("write", lambda *_: self._mode_selected_cmd())
-        self.seletion_cbx = ctk.CTkComboBox(
+        self.mode_var = ctk.StringVar()
+        self.mode_var.trace_add("write", lambda *_: self._mode_selected_cmd())
+        self.mode_cbx = ctk.CTkComboBox(
             self,
-            variable=self.selection_var,
+            variable=self.mode_var,
             values=pydarts.core.get_mode_names(),
         )
-        self.seletion_cbx.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.mode_cbx.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
 
         self.description_lbl = ctk.CTkLabel(
             self,
@@ -59,15 +64,15 @@ class ModeSelectionFrm(ctk.CTkFrame):
         )
         self.description_lbl.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
 
-        self.selection_var.set(pydarts.core.get_mode_names()[0])
+        self.mode_var.set(pydarts.core.get_mode_names()[0])
         return None
 
     def _mode_selected_cmd(self) -> None:
         # somehow 'write' is triggered twice, but only the second event has a value
-        if not (selection := self.selection_var.get()):
+        if not (selection := self.mode_var.get()):
             return None
-        self.mode = pydarts.core.get_mode_by_name(selection)
-        self.description_lbl.configure(text=self.mode.get_description())
+        mode = pydarts.core.get_mode_by_name(selection)
+        self.description_lbl.configure(text=mode.get_description())
         return None
 
 
@@ -76,8 +81,10 @@ class PlayerSelectionFrm(ctk.CTkFrame):
         super().__init__(*args, **kwargs)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=1, weight=1)
-        self.players: list[str] = []
         self.max_players = 8
+
+        self.players_var = pydarts.gui.StrListVar()
+        self.players_var.trace_add("write", lambda *_: self._draw_players())
 
         self.player_entry_frm = PlayerEntryFrm(self, fg_color="transparent")
         self.player_entry_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
@@ -94,7 +101,7 @@ class PlayerSelectionFrm(ctk.CTkFrame):
     def _draw_players(self) -> None:
         for child in self.player_overview_sfrm.winfo_children():
             child.destroy()
-        for row, player in enumerate(self.players):
+        for row, player in enumerate(self.players_var.get()):
             player_frm = PlayerFrm(
                 self.player_overview_sfrm,
                 position=row+1,
@@ -106,33 +113,37 @@ class PlayerSelectionFrm(ctk.CTkFrame):
             player_frm.remove_btn.configure(command=functools.partial(self._remove_player_cmd, row))
             if row == 0:
                 player_frm.move_up_btn.configure(state="disabled")
-            if row == len(self.players) - 1:
+            if row == len(self.players_var.get()) - 1:
                 player_frm.move_down_btn.configure(state="disabled")
         return None
 
     def _add_player_cmd(self) -> None:
         name = self.player_entry_frm.entry_var.get().strip()
-        if name and name not in self.players and len(self.players) < self.max_players:
-            self.players.append(name)
+        players = self.players_var.get()
+        if name and name not in players and len(players) < self.max_players:
+            players.append(name)
         self.player_entry_frm.entry_var.set("")
-        self._draw_players()
+        self.players_var.set(players)
         return None
 
     def _move_player_up_cmd(self, row: int) -> None:
-        player = self.players.pop(row)
-        self.players.insert(row-1, player)
-        self._draw_players()
+        players = self.players_var.get()
+        player = players.pop(row)
+        players.insert(row-1, player)
+        self.players_var.set(players)
         return None
 
     def _move_player_down_cmd(self, row: int) -> None:
-        player = self.players.pop(row)
-        self.players.insert(row+1, player)
-        self._draw_players()
+        players = self.players_var.get()
+        player = players.pop(row)
+        players.insert(row+1, player)
+        self.players_var.set(players)
         return None
 
     def _remove_player_cmd(self, row: int) -> None:
-        self.players.pop(row)
-        self._draw_players()
+        players = self.players_var.get()
+        players.pop(row)
+        self.players_var.set(players)
         return None
 
 
@@ -145,13 +156,22 @@ class PlayerEntryFrm(ctk.CTkFrame):
         self.entry_lbl = ctk.CTkLabel(self, text="Players: ")
         self.entry_lbl.grid(column=0, row=0, sticky="NSWE")
 
-        self.entry_var = tk.StringVar()
-        self.entry_ntr = ctk.CTkEntry(self, textvariable=self.entry_var)
+        self.entry_var = ctk.StringVar()
+        self.entry_ntr = ctk.CTkEntry(
+            self,
+            textvariable=self.entry_var,
+            validate="key",
+            validatecommand=(self.register(self._validate_player_entry_cmd), "%P")
+        )
         self.entry_ntr.grid(column=1, row=0, sticky="NSWE", padx=5)
 
         self.add_btn = ctk.CTkButton(self, text="+", width=10)
         self.add_btn.grid(column=2, row=0, sticky="NSWE")
         return None
+
+    def _validate_player_entry_cmd(self, string: str) -> bool:
+        pattern = r"^[a-zA-Z0-9_ .-]{0,12}$"
+        return re.match(pattern, string) is not None
 
 
 class PlayerOverviewSfrm(ctk.CTkScrollableFrame):

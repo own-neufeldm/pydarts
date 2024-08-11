@@ -1,30 +1,21 @@
 [build-system]
-requires = ["setuptools>=70.0", "setuptools_scm>=8.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
 
-[project]
+[tool.poetry]
 name = "pydarts"
-description = "This is a Desktop app for tracking the score of a Darts game."
+version = "0.0.0"
+description = "Desktop app for tracking the score of a Darts game."
+authors = ["Martin Neufeld <m.neufeld946@gmail.com>"]
+license = "MIT"
 readme = "README.md"
-authors = [{ name = "Martin Neufeld" }]
-dynamic = ["version"]
-requires-python = ">=3.12"
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-]
-dependencies = ["customtkinter==5.2.2"]
 
-[project.scripts]
+[tool.poetry.scripts]
 pydarts = "pydarts.main:main"
 
-[project.urls]
-"Homepage" = "https://github.com/own-neufeldm/pydarts"
-"Bug Tracker" = "https://github.com/own-neufeldm/pydarts/issues"
+[tool.poetry.dependencies]
+python = "^3.12"
+customtkinter = "^5.2.2"
 
-[tool.setuptools]
-py-modules = ["pydarts"]
-
-[tool.setuptools_scm]
-# can be empty if no extra settings are needed, presence enables setuptools_scm
+[tool.poetry-dynamic-versioning]
+enable = true

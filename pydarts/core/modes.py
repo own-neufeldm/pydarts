@@ -10,6 +10,10 @@ class BaseMode():
     def get_description(cls) -> str:
         raise NotImplementedError()
 
+    @classmethod
+    def get_initial_score(cls) -> int:
+        raise NotImplementedError()
+
 
 class Mode301(BaseMode):
     def __init__(self) -> None:
@@ -35,6 +39,10 @@ class Mode301(BaseMode):
             "dolor sit amet."
         )
 
+    @classmethod
+    def get_initial_score(cls) -> int:
+        return 301
+
 
 class Mode501(BaseMode):
     def __init__(self) -> None:
@@ -59,3 +67,7 @@ class Mode501(BaseMode):
             "STET CLITA KASD GUBERGREN, NO SEA TAKIMATA SANCTUS EST LOREM IPSUM "
             "DOLOR SIT AMET."
         )
+
+    @classmethod
+    def get_initial_score(cls) -> int:
+        return 501

@@ -7,7 +7,7 @@ import pydarts.core
 import pydarts.gui
 from pydarts.gui import BaseStage
 from pydarts.gui.game import GameStage
-from pydarts.gui.pregame import PregameStage
+from pydarts.gui.pregame import Root
 
 
 class App(ctk.CTk):
@@ -21,13 +21,13 @@ class App(ctk.CTk):
         ctk.set_widget_scaling(2)
 
         self.active_stage: BaseStage
-        self._load_stage(PregameStage)
+        self._load_stage(Root)
         return None
 
     def _load_stage(self, stage_type: type[BaseStage], **kwargs) -> None:
-        if stage_type is PregameStage:
-            self.active_stage = PregameStage(self, **kwargs)
-            width, height = PregameStage.width, PregameStage.height
+        if stage_type is Root:
+            self.active_stage = Root(self, **kwargs)
+            width, height = Root.width, Root.height
             self.active_stage.start_btn.configure(command=self._start_game_cmd)
         if stage_type is GameStage:
             self.active_stage.destroy()
@@ -56,8 +56,11 @@ class App(ctk.CTk):
         )
 
     def _start_game_cmd(self) -> None:
-        stage: PregameStage = self.active_stage  # type: ignore
-        mode = pydarts.core.get_mode_by_name(stage.mode_selection_frm.mode_var.get())
-        players = stage.player_selection_frm.players_var.get()
+        stage: Root = self.active_stage  # type: ignore
+        mode = pydarts.core.get_mode_by_name(stage.state.mode_name.get())
+        players = [
+            pydarts.core.players.Player(player, mode.get_initial_score())
+            for player in stage.state.player_names.get()
+        ]
         self._load_stage(GameStage, mode=mode, players=players)
         return None

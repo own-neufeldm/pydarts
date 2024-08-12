@@ -1,6 +1,6 @@
 import inspect
 
-from . import modes
+from . import modes, players
 
 
 def get_modes() -> list[type[modes.BaseMode]]:

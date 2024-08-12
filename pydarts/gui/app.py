@@ -3,9 +3,9 @@ import customtkinter as ctk
 import pydarts
 import pydarts.core
 import pydarts.gui
-from pydarts.gui import BaseStage
-from pydarts.gui.game import GameStage
-from pydarts.gui.pregame import Root
+import pydarts.gui.game
+import pydarts.gui.postgame
+import pydarts.gui.pregame
 
 
 class App(ctk.CTk):
@@ -17,32 +17,38 @@ class App(ctk.CTk):
         self.grid_rowconfigure(index=0, weight=1)
         ctk.set_widget_scaling(2)
 
-        self.active_stage: BaseStage
-        self._load_stage(Root)
+        self.pregame_frm: pydarts.gui.pregame.RootFrm
+        self.game_frm: pydarts.gui.game.RootFrm
+        self.postgame_frm: pydarts.gui.postgame.RootFrm
+
+        self.pregame_frm = pydarts.gui.pregame.RootFrm(self)
+        self.pregame_frm.state.start_game.trace_add("write", self._start_game_cmd)
+        self._load_stage(self.pregame_frm)
         return None
 
-    def _load_stage(self, stage_type: type[BaseStage], **kwargs) -> None:
-        if stage_type is Root:
-            self.active_stage = Root(self, **kwargs)
-            width, height = Root.width, Root.height
-            self.active_stage.start_btn.configure(command=self._start_game_cmd)
-        if stage_type is GameStage:
-            self.active_stage.destroy()
-            self.active_stage = GameStage(self, **kwargs)
-            width, height = GameStage.width, GameStage.height
-        self.active_stage.grid(column=0, row=0, sticky="NSWE")
+    def _load_stage(
+        self,
+        stage: (
+            pydarts.gui.pregame.RootFrm |
+            pydarts.gui.game.RootFrm |
+            pydarts.gui.postgame.RootFrm
+        ),
+    ) -> None:
+        width, height = stage.width, stage.height
+        stage.grid(column=0, row=0, sticky="NSWE")
         self.minsize(width, height)
         self.maxsize(width, height)
         x, y = (self.winfo_screenwidth() - width) // 2, (self.winfo_screenheight() - height) // 2
         self.geometry(f"{width}x{height}+{x}+{y}")
         return None
 
-    def _start_game_cmd(self) -> None:
-        stage: Root = self.active_stage  # type: ignore
-        mode = pydarts.core.get_mode_by_name(stage.state.mode_name.get())
+    def _start_game_cmd(self, *args) -> None:
+        mode = pydarts.core.get_mode_by_name(self.pregame_frm.state.mode_name.get())
         players = [
             pydarts.core.players.Player(player, mode.get_initial_score())
-            for player in stage.state.player_names.get()
+            for player in self.pregame_frm.state.player_names.get()
         ]
-        self._load_stage(GameStage, mode=mode, players=players)
+        self.pregame_frm.destroy()
+        self.game_frm = pydarts.gui.game.RootFrm(self, mode=mode(), players=players)
+        self._load_stage(self.game_frm)
         return None

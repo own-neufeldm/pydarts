@@ -5,21 +5,21 @@ import customtkinter as ctk
 import pydarts
 import pydarts.core
 import pydarts.gui
-import pydarts.gui.app
 
 
-class Root(pydarts.gui.BaseStage):
+class RootFrm(ctk.CTkFrame):
     width, height = 1200, 750
 
     class State():
         def __init__(self) -> None:
-            self.player_names = pydarts.gui.StrListVar()
             self.mode_name = ctk.StringVar()
             self.max_players = ctk.IntVar()
+            self.player_names = pydarts.gui.StrListVar()
+            self.start_game = ctk.BooleanVar()
             return None
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, master: ctk.CTk, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
         self.state = self.State()
         self.grid_columnconfigure(index=0, weight=1, minsize=self.width // 2)
         self.grid_columnconfigure(index=1, weight=1, minsize=self.width // 2)
@@ -33,12 +33,12 @@ class Root(pydarts.gui.BaseStage):
         self.players_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
         self.state.player_names.trace_add("write", self._selection_changed_cmd)
 
-        self.start_btn = ctk.CTkButton(self, text="Start")
+        self.start_btn = ctk.CTkButton(self, text="Start", command=self._start_game_cmd)
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
-        self.state.mode_name.set(pydarts.core.get_mode_names()[0])
         self.state.max_players.set(8)
+        self.state.mode_name.set(pydarts.core.get_mode_names()[0])
         return None
 
     def _selection_changed_cmd(self, *args) -> None:
@@ -50,18 +50,23 @@ class Root(pydarts.gui.BaseStage):
             self.start_btn.configure(state="disabled")
         return None
 
+    def _start_game_cmd(self, *args) -> None:
+        self.state.start_game.set(True)
+        return None
+
 
 class ModeFrm(ctk.CTkFrame):
     class State():
-        def __init__(self, state: Root.State) -> None:
-            self.player_names = state.player_names
+        def __init__(self, state: RootFrm.State) -> None:
             self.mode_name = state.mode_name
             self.max_players = state.max_players
+            self.player_names = state.player_names
+            self.start_game = state.start_game
             return None
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.state = self.State(args[0].state)
+    def __init__(self, master: RootFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=2, weight=1)
 
@@ -99,15 +104,16 @@ class ModeFrm(ctk.CTkFrame):
 
 class PlayersFrm(ctk.CTkFrame):
     class State():
-        def __init__(self, state: Root.State) -> None:
-            self.player_names = state.player_names
+        def __init__(self, state: RootFrm.State) -> None:
             self.mode_name = state.mode_name
             self.max_players = state.max_players
+            self.player_names = state.player_names
+            self.start_game = state.start_game
             return None
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.state = self.State(args[0].state)
+    def __init__(self, master: RootFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=2, weight=1)
 
@@ -125,15 +131,16 @@ class PlayersFrm(ctk.CTkFrame):
 class EntryFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: PlayersFrm.State) -> None:
-            self.player_names = state.player_names
             self.mode_name = state.mode_name
             self.max_players = state.max_players
-            self.name = ctk.StringVar()
+            self.player_names = state.player_names
+            self.start_game = state.start_game
+            self.player_name = ctk.StringVar()
             return None
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.state = self.State(args[0].state)
+    def __init__(self, master: PlayersFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.columnconfigure(index=1, weight=1)
 
         self.name_lbl = ctk.CTkLabel(self, text=f"Name:")
@@ -142,7 +149,7 @@ class EntryFrm(ctk.CTkFrame):
         self.name_ntr = ctk.CTkEntry(
             self,
             validate="key",
-            textvariable=self.state.name,
+            textvariable=self.state.player_name,
             validatecommand=(self.register(self._validate_player_entry_cmd), "%P")
         )
         self.name_ntr.grid(column=1, row=0, sticky="NSWE", padx=3)
@@ -164,8 +171,8 @@ class EntryFrm(ctk.CTkFrame):
         return re.match(pattern, string) is not None
 
     def _player_name_entered_cmd(self, *args) -> None:
-        name = self.state.name.get().strip()
-        self.state.name.set("")
+        name = self.state.player_name.get().strip()
+        self.state.player_name.set("")
         if not name:
             return None
         player_names = self.state.player_names.get()
@@ -186,14 +193,15 @@ class EntryFrm(ctk.CTkFrame):
 class PlayersSfrm(ctk.CTkScrollableFrame):
     class State():
         def __init__(self, state: PlayersFrm.State) -> None:
-            self.player_names = state.player_names
             self.mode_name = state.mode_name
             self.max_players = state.max_players
+            self.player_names = state.player_names
+            self.start_game = state.start_game
             return None
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.state = self.State(args[0].state)
+    def __init__(self, master: PlayersFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
 
         self.player_frm_s: list["PlayerFrm"] = []
@@ -218,22 +226,23 @@ class PlayersSfrm(ctk.CTkScrollableFrame):
                 player_name = player_names[index]
             except IndexError:
                 player_name = ""
-            player_frm.state.name.set(player_name)
+            player_frm.state.player_name.set(player_name)
         return None
 
 
 class PlayerFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: PlayersSfrm.State) -> None:
-            self.player_names = state.player_names
             self.mode_name = state.mode_name
             self.max_players = state.max_players
-            self.name = ctk.StringVar()
+            self.player_names = state.player_names
+            self.start_game = state.start_game
+            self.player_name = ctk.StringVar()
             return None
 
-    def __init__(self, *args, position: int, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.state = self.State(args[0].state)
+    def __init__(self, master: PlayersSfrm, *args, position: int, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=1, weight=1)
         self.grid_rowconfigure(index=0, weight=1)
         self.configure(fg_color="transparent", corner_radius=6)
@@ -242,7 +251,7 @@ class PlayerFrm(ctk.CTkFrame):
         self.position_lbl = ctk.CTkLabel(self, text=f"{self.position}.")
         self.position_lbl.grid(column=0, row=0, sticky="NSWE", padx=3)
 
-        self.name_ntr = ctk.CTkEntry(self, state="readonly", textvariable=self.state.name)
+        self.name_ntr = ctk.CTkEntry(self, state="readonly", textvariable=self.state.player_name)
         self.name_ntr.grid(column=1, row=0, sticky="NSWE", padx=3)
 
         self.remove_btn = ctk.CTkButton(
@@ -255,10 +264,10 @@ class PlayerFrm(ctk.CTkFrame):
         return None
 
     def _player_name_removed_cmd(self, *args) -> None:
-        name = self.state.name.get().strip()
+        name = self.state.player_name.get().strip()
         if not name:
             return None
-        self.state.name.set("")
+        self.state.player_name.set("")
         player_names = self.state.player_names.get()
         player_names.remove(name)
         self.state.player_names.set(player_names)

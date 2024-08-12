@@ -1,34 +1,31 @@
-from dataclasses import dataclass
-
 import customtkinter as ctk
 
 import pydarts
 import pydarts.core
 import pydarts.gui
 
-state: "State"
 
-
-@dataclass()
-class State():
-    mode: pydarts.core.modes.BaseMode
-    players: list[pydarts.core.players.Player]
-
-
-class GameStage(pydarts.gui.BaseStage):
+class RootFrm(ctk.CTkFrame):
     width, height = 2100, 1200
+
+    class State():
+        def __init__(self, mode: pydarts.core.modes.BaseMode, players: list[pydarts.core.players.Player]) -> None:
+            self.mode = mode
+            self.players = players
+            return None
 
     def __init__(
         self,
         master: ctk.CTk,
+        *args,
         mode: pydarts.core.modes.BaseMode,
         players: list[pydarts.core.players.Player],
-        *args,
         **kwargs
     ) -> None:
         super().__init__(master, *args, **kwargs)
-        self.grid_columnconfigure(index=0, weight=1, minsize=(GameStage.width // 3) * 2)
-        self.grid_columnconfigure(index=1, weight=1, minsize=(GameStage.width // 3))
+        self.state = self.State(mode, players)
+        self.grid_columnconfigure(index=0, weight=1, minsize=(self.width // 3) * 2)
+        self.grid_columnconfigure(index=1, weight=1, minsize=(self.width // 3))
         self.grid_rowconfigure(index=0, weight=1)
 
         self.input_frm = InputFrm(self)
@@ -36,21 +33,32 @@ class GameStage(pydarts.gui.BaseStage):
 
         self.turn_frm = TurnFrm(self)
         self.turn_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
-
-        global state
-        state = State(mode, players)
         return None
 
 
 class InputFrm(ctk.CTkFrame):
-    def __init__(self, master: GameStage, *args, **kwargs) -> None:
+    class State():
+        def __init__(self, state: RootFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: RootFrm, *args, **kwargs) -> None:
         super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         return None
 
 
 class TurnFrm(ctk.CTkFrame):
-    def __init__(self, master: GameStage, *args, **kwargs) -> None:
+    class State():
+        def __init__(self, state: RootFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: RootFrm, *args, **kwargs) -> None:
         super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_rowconfigure(index=1, weight=1)
 
@@ -66,8 +74,15 @@ class TurnFrm(ctk.CTkFrame):
 
 
 class TurnOrderFrm(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    class State():
+        def __init__(self, state: TurnFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: TurnFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_columnconfigure(index=1, weight=1)
 
@@ -90,15 +105,22 @@ class TurnOrderFrm(ctk.CTkFrame):
         )
 
     def _next_player_cmd(self) -> None:
-        for position, player in enumerate(state.players, start=1):
+        for position, player in enumerate(self.state.players, start=1):
             child: ctk.CTkLabel = self.winfo_children()[position-1]
             child.configure(text=f"{position}. {player.name} ({player.score})")
         return None
 
 
 class ActiveTurnFrm(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    class State():
+        def __init__(self, state: TurnFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: TurnFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
 
         self.active_turn_input_frm = ActiveTurnInputFrm(self, fg_color="transparent")
@@ -110,8 +132,15 @@ class ActiveTurnFrm(ctk.CTkFrame):
 
 
 class ActiveTurnInputFrm(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    class State():
+        def __init__(self, state: ActiveTurnFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: ActiveTurnFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_columnconfigure(index=1, weight=1)
         self.grid_columnconfigure(index=2, weight=1)
@@ -128,8 +157,15 @@ class ActiveTurnInputFrm(ctk.CTkFrame):
 
 
 class ActiveTurnControlsFrm(ctk.CTkFrame):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    class State():
+        def __init__(self, state: ActiveTurnFrm.State) -> None:
+            self.mode = state.mode
+            self.players = state.players
+            return None
+
+    def __init__(self, master: ActiveTurnFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
         self.grid_columnconfigure(index=1, weight=1)
 

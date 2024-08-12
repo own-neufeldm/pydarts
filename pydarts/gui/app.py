@@ -1,5 +1,3 @@
-import tkinter as tk
-
 import customtkinter as ctk
 
 import pydarts
@@ -11,9 +9,8 @@ from pydarts.gui.pregame import Root
 
 
 class App(ctk.CTk):
-    def __init__(self, enable_debug: bool) -> None:
-        super().__init__()
-        self.enable_debug = enable_debug
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.title("PyDarts")
         self.iconbitmap(pydarts.assets_dir / "icon.ico")
         self.grid_columnconfigure(index=0, weight=1)
@@ -38,22 +35,7 @@ class App(ctk.CTk):
         self.maxsize(width, height)
         x, y = (self.winfo_screenwidth() - width) // 2, (self.winfo_screenheight() - height) // 2
         self.geometry(f"{width}x{height}+{x}+{y}")
-        if self.enable_debug:
-            self._enable_debug()
         return None
-
-    def _enable_debug(self):
-        pydarts.gui.highlight_children(self)
-        sequences = []
-        for sequence in sequences:
-            self.bind_all(sequence, self._handle_event)
-
-    def _handle_event(self, event: tk.Event):
-        pydarts.logger.debug(
-            f"application caught event:\n"
-            f"  event: {event!r}\n"
-            f"  widget: {event.widget!r}"
-        )
 
     def _start_game_cmd(self) -> None:
         stage: Root = self.active_stage  # type: ignore

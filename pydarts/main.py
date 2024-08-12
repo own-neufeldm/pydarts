@@ -19,7 +19,7 @@ def parse_args() -> Args:
     )
     parser.add_argument(
         "--debug",
-        help="write verbose messages and outline widgets",
+        help="write verbose messages to stdout",
         dest="enable_debug",
         action="store_true",
     )
@@ -38,7 +38,7 @@ def main() -> None:
     if args.show_version:
         print(pydarts.__version__)
         return None
-    app = App(args.enable_debug)
+    app = App()
     app.mainloop()
     return None
 

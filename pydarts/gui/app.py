@@ -43,6 +43,8 @@ class App(ctk.CTk):
         return None
 
     def _start_game_cmd(self, *args) -> None:
+        if not self.pregame_frm.state.start_game.get():
+            return None
         mode = pydarts.core.get_mode_by_name(self.pregame_frm.state.mode_name.get())
         players = [
             pydarts.core.players.Player(player, mode.get_initial_score())

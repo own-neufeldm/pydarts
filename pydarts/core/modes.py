@@ -27,16 +27,7 @@ class Mode301(BaseMode):
     @classmethod
     def get_description(cls) -> str:
         return (
-            "lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam "
-            "nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam "
-            "erat, sed diam voluptua. at vero eos et accusam et justo duo "
-            "dolores et ea rebum. stet clita kasd gubergren, no sea takimata "
-            "sanctus est lorem ipsum dolor sit amet. lorem ipsum dolor sit "
-            "amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor "
-            "invidunt ut labore et dolore magna aliquyam erat, sed diam "
-            "voluptua. at vero eos et accusam et justo duo dolores et ea rebum. "
-            "stet clita kasd gubergren, no sea takimata sanctus est lorem ipsum "
-            "dolor sit amet."
+            "All players start with 301 points, the goal is to reach 0."
         )
 
     @classmethod
@@ -56,16 +47,7 @@ class Mode501(BaseMode):
     @classmethod
     def get_description(cls) -> str:
         return (
-            "LOREM IPSUM DOLOR SIT AMET, CONSETETUR SADIPSCING ELITR, SED DIAM "
-            "NONUMY EIRMOD TEMPOR INVIDUNT UT LABORE ET DOLORE MAGNA ALIQUYAM "
-            "ERAT, SED DIAM VOLUPTUA. AT VERO EOS ET ACCUSAM ET JUSTO DUO "
-            "DOLORES ET EA REBUM. STET CLITA KASD GUBERGREN, NO SEA TAKIMATA "
-            "SANCTUS EST LOREM IPSUM DOLOR SIT AMET. LOREM IPSUM DOLOR SIT "
-            "AMET, CONSETETUR SADIPSCING ELITR, SED DIAM NONUMY EIRMOD TEMPOR "
-            "INVIDUNT UT LABORE ET DOLORE MAGNA ALIQUYAM ERAT, SED DIAM "
-            "VOLUPTUA. AT VERO EOS ET ACCUSAM ET JUSTO DUO DOLORES ET EA REBUM. "
-            "STET CLITA KASD GUBERGREN, NO SEA TAKIMATA SANCTUS EST LOREM IPSUM "
-            "DOLOR SIT AMET."
+            "All players start with 501 points, the goal is to reach 0."
         )
 
     @classmethod

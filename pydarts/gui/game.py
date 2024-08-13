@@ -2,6 +2,8 @@ import customtkinter as ctk
 
 import pydarts
 import pydarts.core
+import pydarts.core.modes
+import pydarts.core.players
 import pydarts.gui
 
 

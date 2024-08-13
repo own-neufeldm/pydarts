@@ -2,6 +2,8 @@ import customtkinter as ctk
 
 import pydarts
 import pydarts.core
+import pydarts.core.modes
+import pydarts.core.players
 import pydarts.gui
 import pydarts.gui.game
 import pydarts.gui.postgame
@@ -45,7 +47,7 @@ class App(ctk.CTk):
     def _start_game_cmd(self, *args) -> None:
         if not self.pregame_frm.state.start_game.get():
             return None
-        mode = pydarts.core.get_mode_by_name(self.pregame_frm.state.mode_name.get())
+        mode = pydarts.core.modes.get_mode_by_name(self.pregame_frm.state.mode_name.get())
         players = [
             pydarts.core.players.Player(player, mode.get_initial_score())
             for player in self.pregame_frm.state.player_names.get()

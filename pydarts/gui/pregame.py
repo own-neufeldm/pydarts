@@ -4,6 +4,7 @@ import customtkinter as ctk
 
 import pydarts
 import pydarts.core
+import pydarts.core.modes
 import pydarts.gui
 
 
@@ -37,7 +38,7 @@ class RootFrm(ctk.CTkFrame):
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
-        self.state.mode_name.set(pydarts.core.get_modes()[0].get_name())
+        self.state.mode_name.set(pydarts.core.modes.get_modes()[0].get_name())
         self.state.max_players.set(8)
         self.player_names = self.state.player_names.set([])
         return None
@@ -81,7 +82,7 @@ class ModeFrm(ctk.CTkFrame):
         self.selection_cmbbox = ctk.CTkComboBox(
             self,
             variable=self.state.mode_name,
-            values=pydarts.core.get_mode_names(),
+            values=pydarts.core.modes.get_mode_names(),
             state="readonly",
         )
         self.selection_cmbbox.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 5))
@@ -103,7 +104,7 @@ class ModeFrm(ctk.CTkFrame):
         # somehow 'write' is triggered twice, but only the second event has a value
         if not (selection := self.state.mode_name.get()):
             return None
-        new_mode_type = pydarts.core.get_mode_by_name(selection)
+        new_mode_type = pydarts.core.modes.get_mode_by_name(selection)
         try:
             current_mode_type = self.state.mode_type.get()
         except AttributeError:

@@ -12,9 +12,10 @@ class RootFrm(ctk.CTkFrame):
 
     class State():
         def __init__(self) -> None:
-            self.mode_name = ctk.StringVar()
+            self.mode_name = ctk.StringVar()  # use mode_type to check if mode changed
+            self.mode_type = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
             self.max_players = ctk.IntVar()
-            self.player_names = pydarts.gui.StrListVar()
+            self.player_names = pydarts.gui.TypedVar(value_type=list[str])
             self.start_game = ctk.BooleanVar()
             return None
 
@@ -27,30 +28,29 @@ class RootFrm(ctk.CTkFrame):
 
         self.mode_frm = ModeFrm(self)
         self.mode_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
-        self.state.mode_name.trace_add("write", self._selection_changed_cmd)
 
         self.players_frm = PlayersFrm(self)
         self.players_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
-        self.state.player_names.trace_add("write", self._selection_changed_cmd)
+        self.state.player_names.trace_add("write", self._player_names_changed_cmd)
 
-        self.start_btn = ctk.CTkButton(self, text="Start", command=self._start_game_cmd)
+        self.start_btn = ctk.CTkButton(self, text="Start", command=self._game_started_cmd)
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
+        self.state.mode_name.set(pydarts.core.get_modes()[0].get_name())
         self.state.max_players.set(8)
-        self.state.mode_name.set(pydarts.core.get_mode_names()[0])
+        self.player_names = self.state.player_names.set([])
         return None
 
-    def _selection_changed_cmd(self, *args) -> None:
-        mode = self.state.mode_name.get()
-        players = self.state.player_names.get()
-        if mode and players:
+    def _player_names_changed_cmd(self, *args) -> None:
+        player_names = self.state.player_names.get()
+        if player_names:
             self.start_btn.configure(state="enabled")
         else:
             self.start_btn.configure(state="disabled")
         return None
 
-    def _start_game_cmd(self, *args) -> None:
+    def _game_started_cmd(self, *args) -> None:
         self.state.start_game.set(True)
         return None
 
@@ -59,6 +59,7 @@ class ModeFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: RootFrm.State) -> None:
             self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
             self.max_players = state.max_players
             self.player_names = state.player_names
             self.start_game = state.start_game
@@ -68,19 +69,22 @@ class ModeFrm(ctk.CTkFrame):
         super().__init__(master, *args, **kwargs)
         self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
-        self.grid_rowconfigure(index=2, weight=1)
+        self.grid_rowconfigure(index=3, weight=1)
 
         self.title_lbl = ctk.CTkLabel(self, text="Game mode", fg_color="gray30", corner_radius=6)
-        self.title_lbl.grid(row=0, column=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.title_lbl.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
 
-        self.state.mode_name.trace_add("write", self._mode_selected_cmd)
-        self.mode_cbx = ctk.CTkComboBox(
+        # only allowed bind for mode_name, use mode_type everywhere else
+        self.state.mode_name.trace_add("write", self._mode_name_changed_cmd)
+        self.state.mode_type.trace_add("write", self._mode_type_changed_cmd)
+
+        self.selection_cmbbox = ctk.CTkComboBox(
             self,
             variable=self.state.mode_name,
             values=pydarts.core.get_mode_names(),
             state="readonly",
         )
-        self.mode_cbx.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 5))
+        self.selection_cmbbox.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 5))
 
         self.description_lbl = ctk.CTkLabel(
             self,
@@ -89,16 +93,83 @@ class ModeFrm(ctk.CTkFrame):
             justify="left",
             wraplength=250,
         )
-        self.description_lbl.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 10))
+        self.description_lbl.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 5))
+
+        self.options_sfrm = OptionsFrm(self)
+        self.options_sfrm.grid(column=0, row=3, sticky="NSWE", padx=10, pady=(5, 10))
         return None
 
-    def _mode_selected_cmd(self, *args) -> None:
+    def _mode_name_changed_cmd(self, *args) -> None:
         # somehow 'write' is triggered twice, but only the second event has a value
         if not (selection := self.state.mode_name.get()):
             return None
-        # maybe check if mode changed to avoid unnecessary reloads
-        mode = pydarts.core.get_mode_by_name(selection)
-        self.description_lbl.configure(text=mode.get_description())
+        new_mode_type = pydarts.core.get_mode_by_name(selection)
+        try:
+            current_mode_type = self.state.mode_type.get()
+        except AttributeError:
+            current_mode_type = None
+        if new_mode_type is current_mode_type:
+            return None
+        self.state.mode_type.set(new_mode_type)
+        return None
+
+    def _mode_type_changed_cmd(self, *args) -> None:
+        text = self.state.mode_type.get().get_description()
+        self.description_lbl.configure(text=text)
+        return None
+
+
+class OptionsFrm(ctk.CTkFrame):
+    class State():
+        def __init__(self, state: ModeFrm.State) -> None:
+            self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
+            self.max_players = state.max_players
+            self.player_names = state.player_names
+            self.start_game = state.start_game
+            return None
+
+    def __init__(self, master: ModeFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
+        self.grid_columnconfigure(index=0, weight=1)
+        self.grid_rowconfigure(index=1, weight=1)
+
+        self.title_lbl = ctk.CTkLabel(self, text="Options", fg_color="gray30", corner_radius=6)
+        self.title_lbl.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+
+        self.options_sfrm = OptionsSfrm(self)
+        self.options_sfrm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
+        return None
+
+
+class OptionsSfrm(ctk.CTkScrollableFrame):
+    class State():
+        def __init__(self, state: OptionsFrm.State) -> None:
+            self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
+            self.max_players = state.max_players
+            self.player_names = state.player_names
+            self.start_game = state.start_game
+            return None
+
+    def __init__(self, master: OptionsFrm, *args, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
+        self.grid_columnconfigure(index=0, weight=1)
+
+        self.option_chkbox_s: list[ctk.CTkCheckBox] = []
+        self.state.mode_type.trace_add("write", self._mode_type_changed_cmd)
+        return None
+
+    def _mode_type_changed_cmd(self, *args) -> None:
+        for option_chkbox in self.option_chkbox_s:
+            option_chkbox.destroy()
+        self.option_chkbox_s.clear()
+        for row, option in enumerate(self.state.mode_type.get().get_options()):
+            option_chkbox = ctk.CTkCheckBox(self, text=option)
+            option_chkbox.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
+            self.option_chkbox_s.append(option_chkbox)
         return None
 
 
@@ -106,6 +177,7 @@ class PlayersFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: RootFrm.State) -> None:
             self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
             self.max_players = state.max_players
             self.player_names = state.player_names
             self.start_game = state.start_game
@@ -132,6 +204,7 @@ class EntryFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: PlayersFrm.State) -> None:
             self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
             self.max_players = state.max_players
             self.player_names = state.player_names
             self.start_game = state.start_game
@@ -141,7 +214,7 @@ class EntryFrm(ctk.CTkFrame):
     def __init__(self, master: PlayersFrm, *args, **kwargs) -> None:
         super().__init__(master, *args, **kwargs)
         self.state = self.State(master.state)
-        self.columnconfigure(index=1, weight=1)
+        self.grid_columnconfigure(index=1, weight=1)
 
         self.name_lbl = ctk.CTkLabel(self, text=f"Name:")
         self.name_lbl.grid(column=0, row=0, sticky="NSWE", padx=3)
@@ -194,6 +267,7 @@ class PlayersSfrm(ctk.CTkScrollableFrame):
     class State():
         def __init__(self, state: PlayersFrm.State) -> None:
             self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
             self.max_players = state.max_players
             self.player_names = state.player_names
             self.start_game = state.start_game
@@ -205,21 +279,22 @@ class PlayersSfrm(ctk.CTkScrollableFrame):
         self.grid_columnconfigure(index=0, weight=1)
 
         self.player_frm_s: list["PlayerFrm"] = []
-        self.state.max_players.trace_add("write", self._draw_player_frames)
+        self.state.max_players.trace_add("write", self._max_players_changed_cmd)
 
-        self.state.player_names.trace_add("write", self._draw_player_names)
+        self.state.player_names.trace_add("write", self._player_names_changed_cmd)
         return None
 
-    def _draw_player_frames(self, *args) -> None:
-        for child in self.winfo_children():
-            child.destroy()
+    def _max_players_changed_cmd(self, *args) -> None:
+        for player_frm in self.player_frm_s:
+            player_frm.destroy()
+        self.player_frm_s.clear()
         for row in range(self.state.max_players.get()):
             player_frm = PlayerFrm(self, position=row+1)
             player_frm.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
             self.player_frm_s.append(player_frm)
         return None
 
-    def _draw_player_names(self, *args) -> None:
+    def _player_names_changed_cmd(self, *args) -> None:
         player_names = self.state.player_names.get()
         for index, player_frm in enumerate(self.player_frm_s):
             try:
@@ -234,6 +309,7 @@ class PlayerFrm(ctk.CTkFrame):
     class State():
         def __init__(self, state: PlayersSfrm.State) -> None:
             self.mode_name = state.mode_name
+            self.mode_type = state.mode_type
             self.max_players = state.max_players
             self.player_names = state.player_names
             self.start_game = state.start_game

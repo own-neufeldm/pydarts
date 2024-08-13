@@ -1,26 +1,55 @@
 import tkinter as tk
-from typing import Optional
+import uuid
+from typing import Optional, TypeVar
 
 import customtkinter as ctk
 
+T = TypeVar("T")
 
-class StrListVar(ctk.StringVar):
+
+class TypedVar[T](ctk.StringVar):
     def __init__(
         self,
         master: Optional[tk.Misc] = None,
-        value: Optional[list[str]] = None,
+        *,
+        value: Optional[T] = None,
+        value_type: Optional[type[T]] = None,
         name: Optional[str] = None,
-        separator: str = ",",
     ) -> None:
-        str_value = separator.join(value) if value is not None else ""
-        super().__init__(master, str_value, name)
-        self.separator = separator
+        """
+        Construct a typed variable.
+
+        Do not use for `str`, `int` and `bool`, use built-ins instead.
+
+        MASTER can be given as master widget. VALUE is an optional value, but it
+        has to be `set()` at least once before being read with `get()`. Otherwise
+        an AttributeError will be raised. 
+
+        NAME is an optional Tcl name (defaults to PY_VARnum).
+
+        If NAME matches an existing variable and VALUE is omitted then the
+        existing value is retained.
+        """
+        super().__init__(master, "InitAnyVar", name)
+        if value is not None:
+            self._value = value
+        elif value_type is not None:
+            self._value: value_type  # type: ignore
+        else:
+            raise ValueError("Either value or value type must not be None.")
         return None
 
-    def get(self) -> list[str]:
-        value = super().get()
-        return value.split(self.separator) if value else []
+    def get(self) -> T:
+        """
+        Return the typed variable.
+        """
+        _ = super().get()
+        return self._value
 
-    def set(self, value: list[str]) -> None:
-        super().set(self.separator.join(value))
+    def set(self, value: T) -> None:
+        """
+        Set the variable to VALUE.
+        """
+        self._value = value
+        super().set(str(uuid.uuid4()))
         return None

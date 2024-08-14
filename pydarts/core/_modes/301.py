@@ -2,6 +2,11 @@ from . import BaseMode
 
 
 class Mode(BaseMode):
+    options = {
+        "Double in": False,
+        "Double out": False,
+    }
+
     @classmethod
     def get_name(cls) -> str:
         return "301"
@@ -11,13 +16,6 @@ class Mode(BaseMode):
         return (
             "All players start with 301 points, the goal is to reach 0."
         )
-
-    @classmethod
-    def get_options(cls) -> list[str]:
-        return [
-            "Double in",
-            "Double out",
-        ]
 
     @classmethod
     def get_initial_score(cls) -> int:

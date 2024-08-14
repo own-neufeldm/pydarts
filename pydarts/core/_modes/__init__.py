@@ -1,4 +1,6 @@
 class BaseMode():
+    options: dict[str, bool]
+
     def __init__(self) -> None:
         raise NotImplementedError()
 
@@ -8,10 +10,6 @@ class BaseMode():
 
     @classmethod
     def get_description(cls) -> str:
-        raise NotImplementedError()
-
-    @classmethod
-    def get_options(cls) -> list[str]:
         raise NotImplementedError()
 
     @classmethod

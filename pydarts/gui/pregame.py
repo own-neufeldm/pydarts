@@ -1,3 +1,4 @@
+import functools
 import re
 
 import customtkinter as ctk
@@ -175,10 +176,22 @@ class OptionsSfrm(ctk.CTkScrollableFrame):
         for option_chkbox in self.option_chkbox_s:
             option_chkbox.destroy()
         self.option_chkbox_s.clear()
-        for row, option in enumerate(self.state.mode.get().get_options()):
-            option_chkbox = ctk.CTkCheckBox(self, text=option)
+        options = self.state.mode.get().options
+        for name in options:
+            options[name] = False
+        for row, option in enumerate(options):
+            option_chkbox = ctk.CTkCheckBox(
+                self,
+                text=option,
+                command=functools.partial(self._option_changed_cmd, option)
+            )
             option_chkbox.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
             self.option_chkbox_s.append(option_chkbox)
+        return None
+
+    def _option_changed_cmd(self, option: str) -> None:
+        options = self.state.mode.get().options
+        options[option] = not options[option]
         return None
 
 

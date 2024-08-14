@@ -9,10 +9,10 @@ import pydarts.gui
 
 
 class RootFrm(ctk.CTkFrame):
-    width, height = 1200, 750
-
-    class State():
-        def __init__(self) -> None:
+    class State(pydarts.gui.State):
+        def __init__(self, master_state: pydarts.gui.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             self.mode_name = ctk.StringVar()  # use mode_type to check if mode changed
             self.mode_type = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
             self.max_players = ctk.IntVar()
@@ -22,7 +22,7 @@ class RootFrm(ctk.CTkFrame):
 
     def __init__(self, master: ctk.CTk, *args, **kwargs) -> None:
         super().__init__(master, *args, **kwargs)
-        self.state = self.State()
+        self.state = self.State(master.readonly_state)  # type: ignore
         self.grid_columnconfigure(index=0, weight=1, minsize=self.width // 2)
         self.grid_columnconfigure(index=1, weight=1, minsize=self.width // 2)
         self.grid_rowconfigure(index=0, weight=1)
@@ -32,16 +32,24 @@ class RootFrm(ctk.CTkFrame):
 
         self.players_frm = PlayersFrm(self)
         self.players_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
-        self.state.player_names.trace_add("write", self._player_names_changed_cmd)
 
         self.start_btn = ctk.CTkButton(self, text="Start", command=self._game_started_cmd)
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
+        self.state.player_names.trace_add("write", self._player_names_changed_cmd)
         self.state.mode_name.set(pydarts.core.modes.get_modes()[0].get_name())
         self.state.max_players.set(8)
         self.player_names = self.state.player_names.set([])
         return None
+
+    @property
+    def width(self) -> int:
+        return self.winfo_screenwidth() // 3 * 2
+
+    @property
+    def height(self) -> int:
+        return self.winfo_screenheight() // 3 * 2
 
     def _player_names_changed_cmd(self, *args) -> None:
         player_names = self.state.player_names.get()
@@ -57,13 +65,10 @@ class RootFrm(ctk.CTkFrame):
 
 
 class ModeFrm(ctk.CTkFrame):
-    class State():
-        def __init__(self, state: RootFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(RootFrm.State):
+        def __init__(self, master_state: RootFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             return None
 
     def __init__(self, master: RootFrm, *args, **kwargs) -> None:
@@ -92,9 +97,14 @@ class ModeFrm(ctk.CTkFrame):
             text="Please select a game mode.",
             anchor="nw",
             justify="left",
-            wraplength=250,
         )
         self.description_lbl.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 5))
+        self.description_lbl.bind(
+            "<Configure>",
+            lambda *_: self.description_lbl.configure(
+                wraplength=self.description_lbl.winfo_width() / self.state.widget_scaling.get()
+            )
+        )
 
         self.options_sfrm = OptionsFrm(self)
         self.options_sfrm.grid(column=0, row=3, sticky="NSWE", padx=10, pady=(5, 10))
@@ -121,13 +131,10 @@ class ModeFrm(ctk.CTkFrame):
 
 
 class OptionsFrm(ctk.CTkFrame):
-    class State():
-        def __init__(self, state: ModeFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(ModeFrm.State):
+        def __init__(self, master_state: ModeFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             return None
 
     def __init__(self, master: ModeFrm, *args, **kwargs) -> None:
@@ -145,13 +152,10 @@ class OptionsFrm(ctk.CTkFrame):
 
 
 class OptionsSfrm(ctk.CTkScrollableFrame):
-    class State():
-        def __init__(self, state: OptionsFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(OptionsFrm.State):
+        def __init__(self, master_state: OptionsFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             return None
 
     def __init__(self, master: OptionsFrm, *args, **kwargs) -> None:
@@ -175,13 +179,10 @@ class OptionsSfrm(ctk.CTkScrollableFrame):
 
 
 class PlayersFrm(ctk.CTkFrame):
-    class State():
-        def __init__(self, state: RootFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(RootFrm.State):
+        def __init__(self, master_state: RootFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             return None
 
     def __init__(self, master: RootFrm, *args, **kwargs) -> None:
@@ -202,13 +203,10 @@ class PlayersFrm(ctk.CTkFrame):
 
 
 class EntryFrm(ctk.CTkFrame):
-    class State():
-        def __init__(self, state: PlayersFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(PlayersFrm.State):
+        def __init__(self, master_state: PlayersFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             self.player_name = ctk.StringVar()
             return None
 
@@ -265,13 +263,10 @@ class EntryFrm(ctk.CTkFrame):
 
 
 class PlayersSfrm(ctk.CTkScrollableFrame):
-    class State():
-        def __init__(self, state: PlayersFrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(PlayersFrm.State):
+        def __init__(self, master_state: PlayersFrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             return None
 
     def __init__(self, master: PlayersFrm, *args, **kwargs) -> None:
@@ -307,13 +302,10 @@ class PlayersSfrm(ctk.CTkScrollableFrame):
 
 
 class PlayerFrm(ctk.CTkFrame):
-    class State():
-        def __init__(self, state: PlayersSfrm.State) -> None:
-            self.mode_name = state.mode_name
-            self.mode_type = state.mode_type
-            self.max_players = state.max_players
-            self.player_names = state.player_names
-            self.start_game = state.start_game
+    class State(PlayersSfrm.State):
+        def __init__(self, master_state: PlayersSfrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
             self.player_name = ctk.StringVar()
             return None
 

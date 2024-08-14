@@ -53,3 +53,17 @@ class TypedVar[T](ctk.StringVar):
         self._value = value
         super().set(str(uuid.uuid4()))
         return None
+
+
+class State():
+    """
+    Nested state class for custom widgets.
+
+    Children must never call `super().__init__()`. Instead, they should set
+    "inherit" their parents state by setting each property of `vars()` again.
+    """
+
+    def __init__(self) -> None:
+        self.widget_scaling = TypedVar(value_type=float)
+        self.appearance_mode = ctk.StringVar()
+        return None

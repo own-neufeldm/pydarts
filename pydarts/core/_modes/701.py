@@ -19,7 +19,6 @@ class Mode(BaseMode):
     @classmethod
     def get_options(cls) -> list[str]:
         return [
-            "Double in",
             "Double out",
         ]
 

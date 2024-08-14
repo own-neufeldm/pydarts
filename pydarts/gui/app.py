@@ -75,12 +75,12 @@ class App(ctk.CTk):
     def _start_game_cmd(self, *args) -> None:
         if not self.pregame_frm.state.start_game.get():
             return None
-        mode = pydarts.core.modes.get_mode_by_name(self.pregame_frm.state.mode_name.get())
+        mode = self.pregame_frm.state.mode_type.get()()
         players = [
             pydarts.core.players.Player(player, mode.get_initial_score())
             for player in self.pregame_frm.state.player_names.get()
         ]
         self.pregame_frm.destroy()
-        self.game_frm = pydarts.gui.game.RootFrm(self, mode=mode(), players=players)
+        self.game_frm = pydarts.gui.game.RootFrm(self, mode=mode, players=players)
         self._load_stage(self.game_frm)
         return None

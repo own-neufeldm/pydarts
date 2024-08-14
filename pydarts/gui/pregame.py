@@ -13,7 +13,6 @@ class RootFrm(ctk.CTkFrame):
         def __init__(self, master_state: pydarts.gui.State) -> None:
             for name, var in vars(master_state).items():
                 setattr(self, name, var)
-            self.mode_name = ctk.StringVar()  # use mode_type to check if mode changed
             self.mode_type = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
             self.max_players = ctk.IntVar()
             self.player_names = pydarts.gui.TypedVar(value_type=list[str])
@@ -37,8 +36,8 @@ class RootFrm(ctk.CTkFrame):
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
+        self.state.mode_type.set(pydarts.core.modes.get_modes()[0])
         self.state.player_names.trace_add("write", self._player_names_changed_cmd)
-        self.state.mode_name.set(pydarts.core.modes.get_modes()[0].get_name())
         self.state.max_players.set(8)
         self.player_names = self.state.player_names.set([])
         return None
@@ -69,6 +68,7 @@ class ModeFrm(ctk.CTkFrame):
         def __init__(self, master_state: RootFrm.State) -> None:
             for name, var in vars(master_state).items():
                 setattr(self, name, var)
+            self.mode_name = ctk.StringVar()  # use mode_type to check if mode changed
             return None
 
     def __init__(self, master: RootFrm, *args, **kwargs) -> None:
@@ -125,8 +125,12 @@ class ModeFrm(ctk.CTkFrame):
         return None
 
     def _mode_type_changed_cmd(self, *args) -> None:
+        new_mode_name = self.state.mode_type.get().get_name()
         text = self.state.mode_type.get().get_description()
         self.description_lbl.configure(text=text)
+        if self.state.mode_name.get() == new_mode_name:
+            return None
+        self.state.mode_name.set(new_mode_name)
         return None
 
 

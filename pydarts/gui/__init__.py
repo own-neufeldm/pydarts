@@ -66,4 +66,5 @@ class State():
     def __init__(self) -> None:
         self.widget_scaling = TypedVar(value_type=float)
         self.appearance_mode = ctk.StringVar()
+        self.color_theme = ctk.StringVar()
         return None

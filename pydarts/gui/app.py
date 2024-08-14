@@ -29,6 +29,8 @@ class App(ctk.CTk):
         self.readonly_state.widget_scaling.set(2.5)
         self.readonly_state.appearance_mode.trace_add("write", self._appearance_mode_changed_cmd)
         self.readonly_state.appearance_mode.set("dark")
+        self.readonly_state.color_theme.trace_add("write", self._color_theme_changed_cmd)
+        self.readonly_state.color_theme.set("dark-blue")
 
         self.pregame_frm: pydarts.gui.pregame.RootFrm
         self.game_frm: pydarts.gui.game.RootFrm
@@ -47,6 +49,11 @@ class App(ctk.CTk):
     def _appearance_mode_changed_cmd(self, *args) -> None:
         value = self.readonly_state.appearance_mode.get()
         ctk.set_appearance_mode(value)
+        return None
+
+    def _color_theme_changed_cmd(self, *args) -> None:
+        value = self.readonly_state.color_theme.get()
+        ctk.set_default_color_theme(value)
         return None
 
     def _load_stage(

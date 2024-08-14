@@ -13,7 +13,7 @@ class RootFrm(ctk.CTkFrame):
         def __init__(self, master_state: pydarts.gui.State) -> None:
             for name, var in vars(master_state).items():
                 setattr(self, name, var)
-            self.mode_type = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
+            self.mode = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
             self.max_players = ctk.IntVar()
             self.player_names = pydarts.gui.TypedVar(value_type=list[str])
             self.start_game = ctk.BooleanVar()
@@ -36,7 +36,7 @@ class RootFrm(ctk.CTkFrame):
         self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
-        self.state.mode_type.set(pydarts.core.modes.get_modes()[0])
+        self.state.mode.set(pydarts.core.modes.get_modes()[0])
         self.state.player_names.trace_add("write", self._player_names_changed_cmd)
         self.state.max_players.set(8)
         self.player_names = self.state.player_names.set([])
@@ -68,7 +68,7 @@ class ModeFrm(ctk.CTkFrame):
         def __init__(self, master_state: RootFrm.State) -> None:
             for name, var in vars(master_state).items():
                 setattr(self, name, var)
-            self.mode_name = ctk.StringVar()  # use mode_type to check if mode changed
+            self.mode_name = ctk.StringVar()  # use mode to check if mode changed
             return None
 
     def __init__(self, master: RootFrm, *args, **kwargs) -> None:
@@ -80,9 +80,9 @@ class ModeFrm(ctk.CTkFrame):
         self.title_lbl = ctk.CTkLabel(self, text="Game mode", fg_color="gray30", corner_radius=6)
         self.title_lbl.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
 
-        # only allowed bind for mode_name, use mode_type everywhere else
+        # only allowed bind for mode_name, use mode everywhere else
         self.state.mode_name.trace_add("write", self._mode_name_changed_cmd)
-        self.state.mode_type.trace_add("write", self._mode_type_changed_cmd)
+        self.state.mode.trace_add("write", self._mode_changed_cmd)
 
         self.selection_cmbbox = ctk.CTkComboBox(
             self,
@@ -114,19 +114,19 @@ class ModeFrm(ctk.CTkFrame):
         # somehow 'write' is triggered twice, but only the second event has a value
         if not (selection := self.state.mode_name.get()):
             return None
-        new_mode_type = pydarts.core.modes.get_mode_by_name(selection)
+        new_mode = pydarts.core.modes.get_mode_by_name(selection)
         try:
-            current_mode_type = self.state.mode_type.get()
+            current_mode = self.state.mode.get()
         except AttributeError:
-            current_mode_type = None
-        if new_mode_type is current_mode_type:
+            current_mode = None
+        if new_mode is current_mode:
             return None
-        self.state.mode_type.set(new_mode_type)
+        self.state.mode.set(new_mode)
         return None
 
-    def _mode_type_changed_cmd(self, *args) -> None:
-        new_mode_name = self.state.mode_type.get().get_name()
-        text = self.state.mode_type.get().get_description()
+    def _mode_changed_cmd(self, *args) -> None:
+        new_mode_name = self.state.mode.get().get_name()
+        text = self.state.mode.get().get_description()
         self.description_lbl.configure(text=text)
         if self.state.mode_name.get() == new_mode_name:
             return None
@@ -168,14 +168,14 @@ class OptionsSfrm(ctk.CTkScrollableFrame):
         self.grid_columnconfigure(index=0, weight=1)
 
         self.option_chkbox_s: list[ctk.CTkCheckBox] = []
-        self.state.mode_type.trace_add("write", self._mode_type_changed_cmd)
+        self.state.mode.trace_add("write", self._mode_changed_cmd)
         return None
 
-    def _mode_type_changed_cmd(self, *args) -> None:
+    def _mode_changed_cmd(self, *args) -> None:
         for option_chkbox in self.option_chkbox_s:
             option_chkbox.destroy()
         self.option_chkbox_s.clear()
-        for row, option in enumerate(self.state.mode_type.get().get_options()):
+        for row, option in enumerate(self.state.mode.get().get_options()):
             option_chkbox = ctk.CTkCheckBox(self, text=option)
             option_chkbox.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
             self.option_chkbox_s.append(option_chkbox)

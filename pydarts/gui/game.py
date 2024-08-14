@@ -14,7 +14,7 @@ class RootFrm(ctk.CTkFrame):
         def __init__(self, master_state: pydarts.gui.State) -> None:
             for name, var in vars(master_state).items():
                 setattr(self, name, var)
-            self.mode = pydarts.gui.TypedVar(value_type=pydarts.core.modes.BaseMode)
+            self.mode = pydarts.gui.TypedVar(value_type=type[pydarts.core.modes.BaseMode])
             self.players = pydarts.gui.TypedVar(value_type=list[pydarts.core.players.Player])
             return None
 
@@ -22,7 +22,7 @@ class RootFrm(ctk.CTkFrame):
         self,
         master: ctk.CTk,
         *args,
-        mode: pydarts.core.modes.BaseMode,
+        mode: type[pydarts.core.modes.BaseMode],
         players: list[pydarts.core.players.Player],
         **kwargs
     ) -> None:

@@ -1,6 +1,6 @@
 class BaseMode():
     def __init__(self) -> None:
-        return None
+        raise NotImplementedError()
 
     @classmethod
     def get_name(cls) -> str:

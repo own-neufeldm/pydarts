@@ -2,10 +2,6 @@ from . import BaseMode
 
 
 class Mode(BaseMode):
-    def __init__(self) -> None:
-        super().__init__()
-        return None
-
     @classmethod
     def get_name(cls) -> str:
         return "501"

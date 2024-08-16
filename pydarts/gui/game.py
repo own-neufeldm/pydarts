@@ -33,10 +33,10 @@ class RootFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=0, weight=1)
 
         self.input_frm = InputFrm(self)
-        self.input_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
+        self.input_frm.grid(column=0, row=0, sticky="nswe", padx=10, pady=10)
 
         self.turn_frm = TurnFrm(self)
-        self.turn_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
+        self.turn_frm.grid(column=1, row=0, sticky="nswe", padx=10, pady=10)
 
         self.state.mode.set(mode)
         self.state.players.set(players)
@@ -106,7 +106,7 @@ class InputFrm(ctk.CTkFrame):
             command=lambda: self._input_provided_cmd(0),
             font=font,
         )
-        miss_btn.grid(column=3, row=0, sticky="NSWE", padx=10, pady=10)
+        miss_btn.grid(column=3, row=0, sticky="nswe", padx=10, pady=10)
         self.input_btn_s.append(miss_btn)
 
         for row in range(1, 6):
@@ -118,7 +118,7 @@ class InputFrm(ctk.CTkFrame):
                     command=functools.partial(self._input_provided_cmd, value),
                     font=font,
                 )
-                input_btn.grid(column=column, row=row, sticky="NSWE", padx=10, pady=10)
+                input_btn.grid(column=column, row=row, sticky="nswe", padx=10, pady=10)
                 self.input_btn_s.append(input_btn)
 
         input_btn = ctk.CTkButton(
@@ -127,7 +127,7 @@ class InputFrm(ctk.CTkFrame):
             command=lambda: self._input_provided_cmd(25),
             font=font,
         )
-        input_btn.grid(column=0, row=6, columnspan=4, sticky="NSWE", padx=10, pady=10)
+        input_btn.grid(column=0, row=6, columnspan=4, sticky="nswe", padx=10, pady=10)
         self.input_btn_s.append(input_btn)
         return None
 
@@ -151,20 +151,17 @@ class TurnFrm(ctk.CTkFrame):
         super().__init__(master, *args, **kwargs)
         self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
-        self.grid_rowconfigure(index=1, weight=1)
+        self.grid_rowconfigure(index=0, weight=1)
 
-        self.turn_order_frm = TurnOrderFrm(self)
-        self.turn_order_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
+        self.turn_order_frm = TurnOrderSfrm(self)
+        self.turn_order_frm.grid(column=0, row=0, sticky="nswe", padx=10, pady=10)
 
         self.active_turn_frm = ActiveTurnFrm(self)
-        self.active_turn_frm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=10)
-        self.active_turn_frm.active_turn_controls_frm.next_player_btn.configure(
-            command=self.turn_order_frm._next_player_cmd
-        )
+        self.active_turn_frm.grid(column=0, row=1, sticky="nswe", padx=10, pady=10)
         return None
 
 
-class TurnOrderFrm(ctk.CTkFrame):
+class TurnOrderSfrm(ctk.CTkScrollableFrame):
     class State(TurnFrm.State):
         def __init__(self, master_state: TurnFrm.State) -> None:
             for name, var in vars(master_state).items():
@@ -175,30 +172,54 @@ class TurnOrderFrm(ctk.CTkFrame):
         super().__init__(master, *args, **kwargs)
         self.state = self.State(master.state)
         self.grid_columnconfigure(index=0, weight=1)
-        self.grid_columnconfigure(index=1, weight=1)
 
-        self._get_player_label().grid(column=0, row=0, sticky="NSWE", padx=(10, 5), pady=(10, 5))
-        self._get_player_label().grid(column=0, row=1, sticky="NSWE", padx=(10, 5), pady=(5, 5))
-        self._get_player_label().grid(column=0, row=2, sticky="NSWE", padx=(10, 5), pady=(5, 5))
-        self._get_player_label().grid(column=0, row=3, sticky="NSWE", padx=(10, 5), pady=(5, 10))
-        self._get_player_label().grid(column=1, row=0, sticky="NSWE", padx=(5, 10), pady=(10, 5))
-        self._get_player_label().grid(column=1, row=1, sticky="NSWE", padx=(5, 10), pady=(5, 5))
-        self._get_player_label().grid(column=1, row=2, sticky="NSWE", padx=(5, 10), pady=(5, 5))
-        self._get_player_label().grid(column=1, row=3, sticky="NSWE", padx=(5, 10), pady=(5, 10))
+        self.player_frm_s: list["PlayerFrm"] = []
+        self.state.players.trace_add("write", self._players_changed_cmd)
         return None
 
-    def _get_player_label(self) -> ctk.CTkLabel:
-        return ctk.CTkLabel(
-            self,
-            fg_color="gray30",
-            anchor="w",
-            corner_radius=7,
-        )
+    def _players_changed_cmd(self, *args) -> None:
+        for player_frm in self.player_frm_s:
+            player_frm.destroy()
+        self.player_frm_s.clear()
+        players = self.state.players.get()
+        for row, player in enumerate(players):
+            player_frm = PlayerFrm(self, player=player, fg_color="transparent")
+            player_frm.grid(column=0, row=row, sticky="nswe", padx=5, pady=10)
+            self.player_frm_s.append(player_frm)
+        return None
 
-    def _next_player_cmd(self) -> None:
-        for position, player in enumerate(self.state.players.get(), start=1):
-            child: ctk.CTkLabel = self.winfo_children()[position-1]
-            child.configure(text=f"{position}. {player.name} ({player.score})")
+
+class PlayerFrm(ctk.CTkFrame):
+    class State(TurnOrderSfrm.State):
+        def __init__(self, master_state: TurnOrderSfrm.State) -> None:
+            for name, var in vars(master_state).items():
+                setattr(self, name, var)
+            self.player = pydarts.gui.TypedVar(value_type=pydarts.core.players.Player)
+            return None
+
+    def __init__(self, master: TurnOrderSfrm, *args, player: pydarts.core.players.Player, **kwargs) -> None:
+        super().__init__(master, *args, **kwargs)
+        self.state = self.State(master.state)
+        self.grid_columnconfigure(index=1, weight=1)
+        self.grid_rowconfigure(index=0, weight=1)
+
+        self.indicator_lbl = ctk.CTkLabel(
+            self,
+            text="",
+            width=5,
+            fg_color="red" if player.name == "a" else "transparent",
+        )
+        self.indicator_lbl.grid(column=0, row=0, sticky="nswe", padx=(0, 5))
+
+        self.name_lbl = ctk.CTkLabel(self, anchor="w", fg_color="gray30", corner_radius=6)
+        self.name_lbl.grid(column=1, row=0, sticky="nswe", padx=(0, 0))
+
+        self.state.player.trace_add("write", self._player_changed_cmd)
+        self.state.player.set(player)
+        return None
+
+    def _player_changed_cmd(self, *args) -> None:
+        self.name_lbl.configure(text=self.state.player.get().name)
         return None
 
 
@@ -215,10 +236,10 @@ class ActiveTurnFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=0, weight=1)
 
         self.active_turn_input_frm = ActiveTurnInputFrm(self, fg_color="transparent")
-        self.active_turn_input_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.active_turn_input_frm.grid(column=0, row=0, sticky="nswe", padx=10, pady=(10, 5))
 
         self.active_turn_controls_frm = ActiveTurnControlsFrm(self, fg_color="transparent")
-        self.active_turn_controls_frm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
+        self.active_turn_controls_frm.grid(column=0, row=1, sticky="nswe", padx=10, pady=(5, 10))
         return None
 
 
@@ -237,13 +258,13 @@ class ActiveTurnInputFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=2, weight=1)
 
         self.input_1_ntr = ctk.CTkEntry(self)
-        self.input_1_ntr.grid(column=0, row=0, sticky="NSWE", padx=(0, 5))
+        self.input_1_ntr.grid(column=0, row=0, sticky="nswe", padx=(0, 5))
 
         self.input_2_ntr = ctk.CTkEntry(self)
-        self.input_2_ntr.grid(column=1, row=0, sticky="NSWE", padx=(5, 5))
+        self.input_2_ntr.grid(column=1, row=0, sticky="nswe", padx=(5, 5))
 
         self.input_3_ntr = ctk.CTkEntry(self)
-        self.input_3_ntr.grid(column=2, row=0, sticky="NSWE", padx=(5, 0))
+        self.input_3_ntr.grid(column=2, row=0, sticky="nswe", padx=(5, 0))
         return None
 
 
@@ -261,8 +282,8 @@ class ActiveTurnControlsFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=1, weight=1)
 
         self.undo_btn = ctk.CTkButton(self, text="Undo")
-        self.undo_btn.grid(column=0, row=0, sticky="NSWE", padx=(0, 5))
+        self.undo_btn.grid(column=0, row=0, sticky="nswe", padx=(0, 5))
 
         self.next_player_btn = ctk.CTkButton(self, text="Next player")
-        self.next_player_btn.grid(column=1, row=0, sticky="NSWE", padx=(5, 0))
+        self.next_player_btn.grid(column=1, row=0, sticky="nswe", padx=(5, 0))
         return None

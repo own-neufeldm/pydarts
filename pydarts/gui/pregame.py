@@ -28,13 +28,13 @@ class RootFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=0, weight=1)
 
         self.mode_frm = ModeFrm(self)
-        self.mode_frm.grid(column=0, row=0, sticky="NSWE", padx=10, pady=10)
+        self.mode_frm.grid(column=0, row=0, sticky="nswe", padx=10, pady=10)
 
         self.players_frm = PlayersFrm(self)
-        self.players_frm.grid(column=1, row=0, sticky="NSWE", padx=10, pady=10)
+        self.players_frm.grid(column=1, row=0, sticky="nswe", padx=10, pady=10)
 
         self.start_btn = ctk.CTkButton(self, text="Start", command=self._game_started_cmd)
-        self.start_btn.grid(column=0, row=1, columnspan=2, sticky="NSWE", padx=10, pady=(0, 10))
+        self.start_btn.grid(column=0, row=1, columnspan=2, sticky="nswe", padx=10, pady=(0, 10))
         self.start_btn.configure(state="disabled")
 
         self.state.mode.set(pydarts.core.modes.get_modes()[0])
@@ -79,7 +79,7 @@ class ModeFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=3, weight=1)
 
         self.title_lbl = ctk.CTkLabel(self, text="Game mode", fg_color="gray30", corner_radius=6)
-        self.title_lbl.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.title_lbl.grid(column=0, row=0, sticky="nswe", padx=10, pady=(10, 5))
 
         # only allowed bind for mode_name, use mode everywhere else
         self.state.mode_name.trace_add("write", self._mode_name_changed_cmd)
@@ -91,7 +91,7 @@ class ModeFrm(ctk.CTkFrame):
             values=pydarts.core.modes.get_mode_names(),
             state="readonly",
         )
-        self.selection_cmbbox.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 5))
+        self.selection_cmbbox.grid(column=0, row=1, sticky="nswe", padx=10, pady=(5, 5))
 
         self.description_lbl = ctk.CTkLabel(
             self,
@@ -99,7 +99,7 @@ class ModeFrm(ctk.CTkFrame):
             anchor="nw",
             justify="left",
         )
-        self.description_lbl.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 5))
+        self.description_lbl.grid(column=0, row=2, sticky="nswe", padx=10, pady=(5, 5))
         self.description_lbl.bind(
             "<Configure>",
             lambda *_: self.description_lbl.configure(
@@ -108,7 +108,7 @@ class ModeFrm(ctk.CTkFrame):
         )
 
         self.options_sfrm = OptionsFrm(self)
-        self.options_sfrm.grid(column=0, row=3, sticky="NSWE", padx=10, pady=(5, 10))
+        self.options_sfrm.grid(column=0, row=3, sticky="nswe", padx=10, pady=(5, 10))
         return None
 
     def _mode_name_changed_cmd(self, *args) -> None:
@@ -149,10 +149,10 @@ class OptionsFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=1, weight=1)
 
         self.title_lbl = ctk.CTkLabel(self, text="Options", fg_color="gray30", corner_radius=6)
-        self.title_lbl.grid(column=0, row=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.title_lbl.grid(column=0, row=0, sticky="nswe", padx=10, pady=(10, 5))
 
         self.options_sfrm = OptionsSfrm(self)
-        self.options_sfrm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 10))
+        self.options_sfrm.grid(column=0, row=1, sticky="nswe", padx=10, pady=(5, 10))
         return None
 
 
@@ -185,7 +185,7 @@ class OptionsSfrm(ctk.CTkScrollableFrame):
                 text=option,
                 command=functools.partial(self._option_changed_cmd, option)
             )
-            option_chkbox.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
+            option_chkbox.grid(column=0, row=row, sticky="nswe", padx=5, pady=10)
             self.option_chkbox_s.append(option_chkbox)
         return None
 
@@ -209,13 +209,13 @@ class PlayersFrm(ctk.CTkFrame):
         self.grid_rowconfigure(index=2, weight=1)
 
         self.title_lbl = ctk.CTkLabel(self, text="Players", fg_color="gray30", corner_radius=6)
-        self.title_lbl.grid(row=0, column=0, sticky="NSWE", padx=10, pady=(10, 5))
+        self.title_lbl.grid(row=0, column=0, sticky="nswe", padx=10, pady=(10, 5))
 
         self.entry_frm = EntryFrm(self, fg_color="transparent")
-        self.entry_frm.grid(column=0, row=1, sticky="NSWE", padx=10, pady=(5, 5))
+        self.entry_frm.grid(column=0, row=1, sticky="nswe", padx=10, pady=(5, 5))
 
         self.players_sfrm = PlayersSfrm(self)
-        self.players_sfrm.grid(column=0, row=2, sticky="NSWE", padx=10, pady=(5, 10))
+        self.players_sfrm.grid(column=0, row=2, sticky="nswe", padx=10, pady=(5, 10))
         return None
 
 
@@ -233,7 +233,7 @@ class EntryFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=1, weight=1)
 
         self.name_lbl = ctk.CTkLabel(self, text=f"Name:")
-        self.name_lbl.grid(column=0, row=0, sticky="NSWE", padx=3)
+        self.name_lbl.grid(column=0, row=0, sticky="nswe", padx=3)
 
         self.name_ntr = ctk.CTkEntry(
             self,
@@ -241,7 +241,7 @@ class EntryFrm(ctk.CTkFrame):
             textvariable=self.state.player_name,
             validatecommand=(self.register(self._validate_player_entry_cmd), "%P")
         )
-        self.name_ntr.grid(column=1, row=0, sticky="NSWE", padx=3)
+        self.name_ntr.grid(column=1, row=0, sticky="nswe", padx=3)
         self.name_ntr.bind("<Return>", lambda *_: self.add_btn.invoke())
 
         self.add_btn = ctk.CTkButton(
@@ -250,7 +250,7 @@ class EntryFrm(ctk.CTkFrame):
             width=0,
             command=self._player_name_entered_cmd,
         )
-        self.add_btn.grid(column=2, row=0, sticky="NSWE", padx=3)
+        self.add_btn.grid(column=2, row=0, sticky="nswe", padx=3)
 
         self.state.player_names.trace_add("write", self._player_names_changed_cmd)
         return None
@@ -303,7 +303,7 @@ class PlayersSfrm(ctk.CTkScrollableFrame):
         self.player_frm_s.clear()
         for row in range(self.state.max_players.get()):
             player_frm = PlayerFrm(self, position=row+1)
-            player_frm.grid(column=0, row=row, sticky="NSWE", padx=5, pady=10)
+            player_frm.grid(column=0, row=row, sticky="nswe", padx=5, pady=10)
             self.player_frm_s.append(player_frm)
         return None
 
@@ -335,10 +335,10 @@ class PlayerFrm(ctk.CTkFrame):
 
         self.position = position
         self.position_lbl = ctk.CTkLabel(self, text=f"{self.position}.")
-        self.position_lbl.grid(column=0, row=0, sticky="NSWE", padx=3)
+        self.position_lbl.grid(column=0, row=0, sticky="nswe", padx=3)
 
         self.name_ntr = ctk.CTkEntry(self, state="readonly", textvariable=self.state.player_name)
-        self.name_ntr.grid(column=1, row=0, sticky="NSWE", padx=3)
+        self.name_ntr.grid(column=1, row=0, sticky="nswe", padx=3)
 
         self.remove_btn = ctk.CTkButton(
             self,
@@ -346,7 +346,7 @@ class PlayerFrm(ctk.CTkFrame):
             width=0,
             command=self._player_name_removed_cmd,
         )
-        self.remove_btn.grid(column=2, row=0, sticky="NSWE", padx=3)
+        self.remove_btn.grid(column=2, row=0, sticky="nswe", padx=3)
         return None
 
     def _player_name_removed_cmd(self, *args) -> None:

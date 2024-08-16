@@ -65,7 +65,7 @@ class App(ctk.CTk):
         ),
     ) -> None:
         width, height = stage.width, stage.height
-        stage.grid(column=0, row=0, sticky="NSWE")
+        stage.grid(column=0, row=0, sticky="nswe")
         self.minsize(width, height)
         self.maxsize(width, height)
         x, y = (self.winfo_screenwidth() - width) // 2, (self.winfo_screenheight() - height) // 2

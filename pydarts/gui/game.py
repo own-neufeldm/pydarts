@@ -203,16 +203,11 @@ class PlayerFrm(ctk.CTkFrame):
         self.grid_columnconfigure(index=1, weight=1)
         self.grid_rowconfigure(index=0, weight=1)
 
-        self.indicator_lbl = ctk.CTkLabel(
-            self,
-            text="",
-            width=5,
-            fg_color="red" if player.name == "a" else "transparent",
-        )
-        self.indicator_lbl.grid(column=0, row=0, sticky="nswe", padx=(0, 5))
+        self.indicator_frm = ctk.CTkFrame(self, width=5, height=0, fg_color="transparent")
+        self.indicator_frm.grid(column=0, row=0, sticky="nswe")
 
         self.name_lbl = ctk.CTkLabel(self, anchor="w", fg_color="gray30", corner_radius=6)
-        self.name_lbl.grid(column=1, row=0, sticky="nswe", padx=(0, 0))
+        self.name_lbl.grid(column=1, row=0, sticky="nswe", padx=(3, 0))
 
         self.state.player.trace_add("write", self._player_changed_cmd)
         self.state.player.set(player)

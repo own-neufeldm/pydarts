@@ -3,9 +3,8 @@
 .AppleDouble
 .LSOverride
 
-# python build
+# python
 __pycache__
-*.egg-info
-.venv
-build
-dist
+
+# editor
+.vscode

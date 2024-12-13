@@ -1,23 +1,43 @@
 # pydarts
 
-This is a Python app for tracking the score of a Darts game.
+This is a Desktop app for tracking the score of a Darts game.
 
 ## Requirements
 
-This application requires Python v3.11 (or higher) to be installed. It was developed on and for
-Windows (x64), though other common operating systems are probably supported too (not tested).
+The following dependencies must already be installed on your system:
+
+| Dependency                                  | Version |
+| ------------------------------------------- | ------- |
+| [python](https://www.python.org/downloads/) | ^3.12   |
+| [pipx](https://pipx.pypa.io/stable/)        | ^1.6    |
+
+This app was written on and for Windows 10 (x64). It may work on other operating systems but it is
+not officially supported.
 
 ## Setup
 
-Assuming your environment meets the requirements stated above, install like so on Windows:
+Install the app using `pipx`, e.g. directly from GitHub using SSH:
 
-1. clone this repository and `cd` into it
-2. create a virtual environment (venv): `python -m venv .\.venv`
-3. activate the virtual environment: `.\.venv\Scripts\Activate.ps1`
-4. install pydarts in the virtual environment: `pip install -e .`
-5. create an executable: `pyinstaller .\pydarts.spec`
+```
+$ pipx install git+ssh://git@github.com/own-neufeldm/pydarts.git
 
-You now have a portable executable at `.\dist\pydarts.exe` which you can move and run.
+  installed package pydarts 2.0.0, installed using Python 3.12.5
+  These apps are now globally available
+    - pydarts.exe
+done! ✨ 🌟 ✨
+```
+
+You can now run the app using `pydarts`.
+
+Additionally, you can configure a shortcut to run the app from your Start Menu without opening a
+Terminal first. To do so, create a shortcut named `PyDarts` in the
+`C:\ProgramData\Microsoft\Windows\Start Menu\Programs` directory. Point it to the following target:
+`pwsh.exe -w hidden -c pydarts`. You can use [this asset](./pydarts/assets/icon.ico) as icon.
+
+> [!NOTE]
+> If you do not have PowerShell 7 (`pwsh`) installed, use `powershell.exe` instead.
+
+You can now run the app from your Start Menu using `PyDarts`.
 
 ## Attributions
 
@@ -25,7 +45,7 @@ The following resources have been authored by other people:
 
 | Resource                            | Attribution                                          |
 | ----------------------------------- | ---------------------------------------------------- |
-| [App icon](pydarts/icons/darts.ico) | [Icon by Smashicons](https://www.freepik.com/search) |
+| [App icon](pydarts/assets/icon.ico) | [Icon by Smashicons](https://www.freepik.com/search) |
 
 Thank you.
 

@@ -2,23 +2,25 @@ import logging
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-package_dir = Path(__file__).parent
-logger = logging.getLogger(__package__)
+assets_dir = Path(__file__).parent / "assets"
+logger: logging.Logger
 try:
-    __version__ = version(__package__)
+    __version__ = version(str(__package__))
 except PackageNotFoundError:
     # package is not installed
     pass
 
 
-def configure_logging(debug: bool) -> None:
+def configure_logging(enable_debug: bool) -> None:
     """
     Configure package-level logging.
     """
-    level = logging.DEBUG if debug else logging.INFO
+    global logger
+    logger = logging.getLogger(__package__)
+    level = logging.DEBUG if enable_debug else logging.INFO
     logger.setLevel(level)
     handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(level)
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
     logger.addHandler(handler)
     return None

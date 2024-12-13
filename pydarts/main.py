@@ -1,36 +1,45 @@
-import sys
-
-from PySide6.QtCore import QCommandLineOption, QCommandLineParser
+import argparse
 
 import pydarts
-from pydarts.widgets.application import Application
+from pydarts.gui.app import App
 
 
-def parse(app: Application) -> None:
-    parser = QCommandLineParser()
-    parser.addHelpOption()
-    version_option = QCommandLineOption(
-        ["v", "version"],
-        "Show version and exit.",
+class Args(argparse.Namespace):
+    def __init__(self, args: argparse.Namespace) -> None:
+        super().__init__(**args.__dict__)
+        self.enable_debug: bool
+        self.show_version: bool
+        return None
+
+
+def parse_args() -> Args:
+    parser = argparse.ArgumentParser(
+        prog="pydarts",
+        description="Tracks the score of a Darts game.",
     )
-    parser.addOption(version_option)
-    debug_option = QCommandLineOption(
-        ["d", "debug"],
-        "Write debug messages to stdout.",
+    parser.add_argument(
+        "--debug",
+        help="write verbose messages to stdout",
+        dest="enable_debug",
+        action="store_true",
     )
-    parser.addOption(debug_option)
-    parser.process(app)
-    pydarts.configure_logging(parser.isSet(debug_option))
-    if parser.isSet(version_option):
-        print(pydarts.__version__)
-        sys.exit()
-    return None
+    parser.add_argument(
+        "--version",
+        help="show the installed version and exit",
+        dest="show_version",
+        action="store_true",
+    )
+    return Args(parser.parse_args())
 
 
 def main() -> None:
-    app = Application(sys.argv)
-    parse(app)
-    app.exec()
+    args = parse_args()
+    pydarts.configure_logging(args.enable_debug)
+    if args.show_version:
+        print(pydarts.__version__)
+        return None
+    app = App()
+    app.mainloop()
     return None
 
 

@@ -2,6 +2,10 @@
 
 This is a Python app for tracking the score of a Darts game.
 
+## Archive Notice
+
+This project was abandoned in favor of [own.neufeldm/darts-tracker](https://github.com/own-neufeldm/darts-tracker).
+
 ## Requirements
 
 This application requires Python v3.11 (or higher) to be installed. It was developed on and for
